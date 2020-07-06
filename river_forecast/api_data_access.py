@@ -11,6 +11,12 @@ class RivermapDataRetriever:
         self.api_key = os.environ.get("PRIVATE_RIVERZONE_API_KEY")
 
     def get_latest_river_flow(self, n_days=5, station='Dranse'):
+        """
+        Return the latest river discharge values from rivermap.ch API
+        :param n_days: Number of past days to include
+        :param station: Nambe of station
+        :return: DataFrame with time and discharge
+        """
         # URL for Dranse @ Bioge
         station_id = self.station_id_dict[station]
         url = f"https://api.riverzone.eu/v2/stations/{station_id}/readings"
