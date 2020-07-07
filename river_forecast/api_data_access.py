@@ -30,3 +30,21 @@ class RivermapDataRetriever:
         flow_df = flow_df.set_index('datetime')
         return flow_df
 
+    def convert_to_hourly_flow(self, flow_df, days=3, include_first_value=True):
+        """
+
+        :param flow_df:
+        :return:
+        """
+        filled_flow_df = flow_df.asfreq('30min', method='bfill')
+        last_timestamp = filled_flow_df.index[-1]
+        if include_first_value:
+            first_time_stamp = last_timestamp - pd.Timedelta(days=days)
+        else:
+            first_time_stamp = last_timestamp - pd.Timedelta(days=days, hours=-1)
+        hourly_filled_flow_df = filled_flow_df.loc[first_time_stamp:last_timestamp].asfreq('H')
+        return hourly_filled_flow_df
+
+    def get_standard_dranse_data(self):
+        flow_df = self.get_latest_river_flow(n_days=4, station='Dranse')
+        return self.convert_to_hourly_flow(flow_df, days=3, include_first_value=False)
