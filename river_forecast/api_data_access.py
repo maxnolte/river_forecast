@@ -25,6 +25,8 @@ class RivermapDataRetriever:
         with requests.get(url=url, params=params) as req:
             readings_json = req.json()
         flow_df = pd.DataFrame(readings_json['readings']['m3s'])
-        flow_df['ts'] = flow_df['ts'].apply(pd.to_datetime, origin='unix', unit='s')
+        flow_df = flow_df.rename(columns={'ts': 'datetime', 'v': 'discharge'})
+        flow_df['datetime'] = flow_df['datetime'].apply(pd.to_datetime, origin='unix', unit='s')
+        flow_df = flow_df.set_index('datetime')
         return flow_df
 
