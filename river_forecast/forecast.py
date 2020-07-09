@@ -54,16 +54,17 @@ class NaiveForecast(Forecast):
         :return:
         """
 
-        ### TO DO !
-
-        return self.model_fit_recent.forecast(steps=n_hours)
+        last_timestamp = recent_flow.iloc[-1:].index.to_pydatetime()[0]
+        forecast_index = pd.date_range(last_timestamp + pd.Timedelta(hours=1),
+                                       last_timestamp + pd.Timedelta(hours=n_hours), freq="h")
+        return pd.Series([recent_flow.iloc[-1].values[0] for _ in range(n_hours)], index=forecast_index)
 
 
 class SARIMAXForecast(Forecast):
 
     model_fit_recent = None
 
-    def __init__(self, model_params_path='models/sarimax_211_011-24_model-parameters.pkl'):
+    def __init__(self, model_params_path='../models/sarimax_211_011-24_model-parameters.pkl'):
         self.model_params = self.load_SARIMAX_params(model_params_path)
 
     def load_SARIMAX_params(self, model_params_path):
