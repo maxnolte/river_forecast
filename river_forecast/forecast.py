@@ -65,7 +65,7 @@ class SARIMAXForecast(Forecast):
 
     model_fit_recent = None
 
-    def __init__(self, model_params_path='../models/sarimax_211_011-24_model-parameters.pkl'):
+    def __init__(self, model_params_path='../models/sarimax_411_011-24_model-parameters.pkl'):
         file_path = (Path(__file__).parent / model_params_path).resolve()
         self.model_params = self.load_SARIMAX_params(file_path)
 
