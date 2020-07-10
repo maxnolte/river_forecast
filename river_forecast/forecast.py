@@ -1,6 +1,7 @@
 import pickle
 import seaborn as sns
 import pandas as pd
+from pathlib import Path
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -23,7 +24,7 @@ class Forecast:
 
         sns.set_style('darkgrid')
         fig, ax = plt.subplots(figsize=(10, 3))
-        forecast_flow = self.dynamic_forecast(recent_flow)
+        forecast_flow = self.dynamic_forecast(recent_flow, n_hours=n_hours)
         recent_flow = recent_flow.iloc[-n_last_hours:]
         ax.plot(pd.concat([recent_flow['discharge'].iloc[-1:], forecast_flow.iloc[:1]]), marker='',
                 linestyle='dashed', color='#7fcdbb');
@@ -36,7 +37,7 @@ class Forecast:
         #ax.xaxis.set_minor_formatter(mdates.DateFormatter("%H:%M"))
         _ = plt.xticks(rotation=45)
         last_time = recent_flow.iloc[-1:].index.strftime("%c")[0]
-        ax.set_title(f'SARIMA Forecast ({last_time})')
+        ax.set_title(f'{self.__class__.__name__} ({last_time})')
         if show:
             plt.show()
         return fig, ax
@@ -65,7 +66,8 @@ class SARIMAXForecast(Forecast):
     model_fit_recent = None
 
     def __init__(self, model_params_path='../models/sarimax_211_011-24_model-parameters.pkl'):
-        self.model_params = self.load_SARIMAX_params(model_params_path)
+        file_path = (Path(__file__).parent / model_params_path).resolve()
+        self.model_params = self.load_SARIMAX_params(file_path)
 
     def load_SARIMAX_params(self, model_params_path):
         return pickle.load(open(model_params_path, 'rb'))
