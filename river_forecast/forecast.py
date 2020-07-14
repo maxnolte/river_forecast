@@ -1,12 +1,15 @@
 import pickle
 import seaborn as sns
 import pandas as pd
+import numpy as np
 from pathlib import Path
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import matplotlib
+import tensorflow as tf
 matplotlib.use('TkAgg')
+
 
 class Forecast:
 
@@ -34,7 +37,7 @@ class Forecast:
 
         ax.set_xticks(pd.concat([recent_flow['discharge'], forecast_flow]).index)
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%a, %H:%M"))
-        #ax.xaxis.set_minor_formatter(mdates.DateFormatter("%H:%M"))
+        # ax.xaxis.set_minor_formatter(mdates.DateFormatter("%H:%M"))
         _ = plt.xticks(rotation=45)
         last_time = recent_flow.iloc[-1:].index.strftime("%c")[0]
         ax.set_title(f'{self.__class__.__name__} ({last_time})')
@@ -79,3 +82,38 @@ class SARIMAXForecast(Forecast):
     def dynamic_forecast(self, recent_flow, n_hours=6):
         self.update_forecast_SARIMAX(recent_flow)
         return self.model_fit_recent.forecast(steps=n_hours)
+
+
+class LSTMForecast(Forecast):
+
+    def __init__(self, model_params_path='../models/LSTM_model'):
+        file_path = (Path(__file__).parent / model_params_path).resolve()
+        self.model = tf.keras.models.load_model(file_path)
+
+    def dynamic_forecast(self, recent_flow, n_hours=6):
+
+        recent_flow = recent_flow.diff(periods=1).dropna()['discharge']
+
+        pred_flow = self.multi_step_forecast_from_diff(recent_flow,
+                                                  recent_flow.iloc[-1], n_steps=n_hours)
+
+        last_timestamp = recent_flow.iloc[-1:].index.to_pydatetime()[0]
+        forecast_index = pd.date_range(last_timestamp + pd.Timedelta(hours=1),
+                                       last_timestamp + pd.Timedelta(hours=n_hours), freq="h")
+        return pd.Series(pred_flow, index=forecast_index)
+
+    def multi_step_forecast(self, time_series, n_steps=12):
+        time_series = np.array(time_series).reshape(1, time_series.size, 1)
+        forecast = np.zeros(n_steps, dtype=float)
+        for i in range(n_steps):
+            time_series = self.model.predict(time_series)
+            forecast[i] = time_series[0, -1, 0]
+        return forecast
+
+    def multi_step_forecast_from_diff(self, time_series, last_value, n_steps=12):
+        forecast = self.multi_step_forecast(time_series, n_steps=n_steps)
+        f_t = last_value
+        for i in range(n_steps):
+            forecast[i] = f_t + forecast[i]
+            f_t = forecast[i]
+        return forecast
