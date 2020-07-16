@@ -92,10 +92,11 @@ class LSTMForecast(Forecast):
 
     def dynamic_forecast(self, recent_flow, n_hours=6):
 
-        recent_flow = recent_flow.diff(periods=1).dropna()['discharge']
+        recent_flow_diff = recent_flow.diff(periods=1).dropna()['discharge']
 
-        pred_flow = self.multi_step_forecast_from_diff(recent_flow,
-                                                  recent_flow.iloc[-1], n_steps=n_hours)
+        pred_flow = self.multi_step_forecast_from_diff(recent_flow_diff,
+                                                       recent_flow.iloc[-1]['discharge'],
+                                                       n_steps=n_hours)
 
         last_timestamp = recent_flow.iloc[-1:].index.to_pydatetime()[0]
         forecast_index = pd.date_range(last_timestamp + pd.Timedelta(hours=1),
@@ -116,4 +117,25 @@ class LSTMForecast(Forecast):
         for i in range(n_steps):
             forecast[i] = f_t + forecast[i]
             f_t = forecast[i]
+        return forecast
+
+
+class LSTMSeq2SeqForecast(Forecast):
+
+    def __init__(self, model_params_path='../models/LSTM_model_v2'):
+        file_path = (Path(__file__).parent / model_params_path).resolve()
+        self.model = tf.keras.models.load_model(file_path, custom_objects={'tf': tf})
+
+    def dynamic_forecast(self, recent_flow, n_hours=6, n_hours_in=24):
+        recent_flow = recent_flow.iloc[-n_hours_in:]
+
+        pred_flow = self.multi_step_forecast_seq2seq(recent_flow).reshape(-1)
+        last_timestamp = recent_flow.iloc[-1:].index.to_pydatetime()[0]
+        forecast_index = pd.date_range(last_timestamp + pd.Timedelta(hours=1),
+                                       last_timestamp + pd.Timedelta(hours=n_hours), freq="h")
+        return pd.Series(pred_flow, index=forecast_index)
+
+    def multi_step_forecast_seq2seq(self, time_series):
+        time_series = np.array(time_series).reshape(1, time_series.size, 1)
+        forecast = self.model.predict(time_series)
         return forecast
