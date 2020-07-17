@@ -13,8 +13,6 @@ matplotlib.use('TkAgg')
 
 class Forecast:
 
-    def __init__(self):
-        pass
 
     def generate_prediction_plot(self, recent_flow, n_hours=6, show=False):
         """
@@ -139,3 +137,47 @@ class LSTMSeq2SeqForecast(Forecast):
         time_series = np.array(time_series).reshape(1, time_series.size, 1)
         forecast = self.model.predict(time_series)
         return forecast
+
+
+class XGBForecast(Forecast):
+    """
+
+    """
+
+    def __init__(self, model_params_path='../models/XGB_models_v1.pkl'):
+        file_path = (Path(__file__).parent / model_params_path).resolve()
+        self.model_dict = pickle.load(open(file_path, 'rb'))
+
+    def dynamic_forecast(self, recent_flow, n_hours=6, n_hours_in=48):
+
+        x_pred = self.create_features(recent_flow, last_n_steps=48).iloc[-1:]
+
+        pred_flow = self.get_predictions_from_model_dict(x_pred)
+
+        last_timestamp = recent_flow.iloc[-1:].index.to_pydatetime()[0]
+        forecast_index = pd.date_range(last_timestamp + pd.Timedelta(hours=1),
+                                       last_timestamp + pd.Timedelta(hours=n_hours), freq="h")
+        return pd.Series(pred_flow, index=forecast_index)
+
+    def get_predictions_from_model_dict(self, validation_x):
+        y =[]
+        for name, model in self.model_dict.items():
+            y.append(model.predict(validation_x))
+        return y
+
+    def create_features(self, flow_df, last_n_steps=6):
+        df = flow_df.copy()
+        for i in range(1, last_n_steps):
+            df[f'discharge_{i}'] = df['discharge'].shift(periods=i)
+
+        for i in range(0, last_n_steps):
+            df[f'discharge_diff_{i}'] = df['discharge'].diff()
+
+        for i in range(0, last_n_steps):
+            df[f'discharge_diff_24_{i}'] = df['discharge'].diff(periods=24)
+
+        df['hour'] = df.index.hour.values
+
+        df = df.dropna()
+
+        return df
