@@ -26,6 +26,7 @@ def convert_to_hourly_flow(flow_df, days=3, include_first_value=True):
 
 
 class RivermapDataRetriever:
+
     """
     This is a class for retrieving data from the rivermap.ch API.
     A private API key is required, contact 'Rivermap supporters' on Facebook, or contact rivermap.ch.

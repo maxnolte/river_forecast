@@ -1,13 +1,17 @@
-import pickle
-import seaborn as sns
-import pandas as pd
+
 import numpy as np
+import pandas as pd
+
 from pathlib import Path
-from statsmodels.tsa.statespace.sarimax import SARIMAX
+import pickle
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-import matplotlib
+import seaborn as sns
+
 import tensorflow as tf
+from statsmodels.tsa.statespace.sarimax import SARIMAX
+
 matplotlib.use('TkAgg')
 
 
@@ -21,11 +25,13 @@ class Forecast:
         :param n_hours:
         :return:
         """
+         
         n_last_hours = 24
 
         sns.set_style('darkgrid')
         fig, ax = plt.subplots(figsize=(10, 3))
         forecast_flow = self.dynamic_forecast(recent_flow, n_hours=n_hours)
+
         recent_flow = recent_flow.iloc[-n_last_hours:]
         ax.plot(pd.concat([recent_flow['discharge'].iloc[-1:], forecast_flow.iloc[:1]]), marker='',
                 linestyle='dashed', color='#7fcdbb')
@@ -35,7 +41,6 @@ class Forecast:
 
         ax.set_xticks(pd.concat([recent_flow['discharge'], forecast_flow]).index)
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%a, %H:%M"))
-        # ax.xaxis.set_minor_formatter(mdates.DateFormatter("%H:%M"))
         _ = plt.xticks(rotation=45)
         last_time = recent_flow.iloc[-1:].index.strftime("%c")[0]
         ax.set_title(f'{self.__class__.__name__} ({last_time})')
@@ -149,7 +154,6 @@ class XGBForecast(Forecast):
         self.model_dict = pickle.load(open(file_path, 'rb'))
 
     def dynamic_forecast(self, recent_flow, n_hours=6, n_hours_in=48):
-        breakpoint()
         x_pred = self.create_features(recent_flow, last_n_steps=48).iloc[-1:]
         pred_flow = self.get_predictions_from_model_dict(x_pred)
         last_timestamp = recent_flow.iloc[-1:].index.to_pydatetime()[0]
