@@ -28,7 +28,7 @@ class Forecast:
         forecast_flow = self.dynamic_forecast(recent_flow, n_hours=n_hours)
         recent_flow = recent_flow.iloc[-n_last_hours:]
         ax.plot(pd.concat([recent_flow['discharge'].iloc[-1:], forecast_flow.iloc[:1]]), marker='',
-                linestyle='dashed', color='#7fcdbb');
+                linestyle='dashed', color='#7fcdbb')
         ax.plot(forecast_flow, marker='.', linestyle='dashed', color='#7fcdbb');
         ax.plot(recent_flow, marker='.', color='#2c7fb8');
         ax.set_ylabel('River flow (m3/s)')
@@ -149,18 +149,16 @@ class XGBForecast(Forecast):
         self.model_dict = pickle.load(open(file_path, 'rb'))
 
     def dynamic_forecast(self, recent_flow, n_hours=6, n_hours_in=48):
-
+        breakpoint()
         x_pred = self.create_features(recent_flow, last_n_steps=48).iloc[-1:]
-
         pred_flow = self.get_predictions_from_model_dict(x_pred)
-
         last_timestamp = recent_flow.iloc[-1:].index.to_pydatetime()[0]
         forecast_index = pd.date_range(last_timestamp + pd.Timedelta(hours=1),
                                        last_timestamp + pd.Timedelta(hours=n_hours), freq="h")
         return pd.Series(pred_flow, index=forecast_index)
 
     def get_predictions_from_model_dict(self, validation_x):
-        y =[]
+        y = []
         for name, model in self.model_dict.items():
             y.append(model.predict(validation_x))
         return y
@@ -177,7 +175,5 @@ class XGBForecast(Forecast):
             df[f'discharge_diff_24_{i}'] = df['discharge'].diff(periods=24)
 
         df['hour'] = df.index.hour.values
-
         df = df.dropna()
-
         return df
