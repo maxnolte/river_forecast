@@ -2,6 +2,7 @@
 import numpy as np
 import pandas as pd
 
+import os
 from pathlib import Path
 import pickle
 import matplotlib
@@ -12,13 +13,15 @@ import seaborn as sns
 import tensorflow as tf
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 
+from river_forecast.training_data_access import get_combined_flow_split
+
 matplotlib.use('TkAgg')
 
 
 class Forecast:
 
 
-    def generate_prediction_plot(self, recent_flow, n_hours=6, show=False):
+    def generate_prediction_plot(self, recent_flow, n_hours=6, show=False, ci=False):
         """
 
         :param recent_flow:
@@ -27,16 +30,32 @@ class Forecast:
         """
          
         n_last_hours = 24
+        colors = ['.9', '#9ecae1', '#3182bd']
 
         sns.set_style('darkgrid')
+        sns.set_style("darkgrid", {"axes.facecolor": colors[0]})
+
         fig, ax = plt.subplots(figsize=(10, 3))
         forecast_flow = self.dynamic_forecast(recent_flow, n_hours=n_hours)
 
         recent_flow = recent_flow.iloc[-n_last_hours:]
-        ax.plot(pd.concat([recent_flow['discharge'].iloc[-1:], forecast_flow.iloc[:1]]), marker='',
-                linestyle='dashed', color='#7fcdbb')
-        ax.plot(forecast_flow, marker='.', linestyle='dashed', color='#7fcdbb');
-        ax.plot(recent_flow, marker='.', color='#2c7fb8');
+        forecast_flow_plot = pd.concat([recent_flow['discharge'].iloc[-1:], forecast_flow])
+
+
+        ax.plot(recent_flow, marker='.', color=colors[2], label='Recent flow')
+        ax.plot(forecast_flow_plot, marker='.', linestyle='dashed', color=colors[2], label='Predicted flow')
+
+        if ci is True:
+            confidence_interval = 80
+            cis = self.get_error_metrics(ci=confidence_interval)['ci']
+
+            negative_ci = np.insert(cis[0], 0, 1)
+            positive_ci = np.insert(cis[1], 0, 1)
+
+            ax.fill_between(forecast_flow_plot.index, forecast_flow_plot * negative_ci,
+                           forecast_flow_plot * positive_ci, color=colors[1],
+                            label=f'{confidence_interval}% confidence interval')
+
         ax.set_ylabel('River flow (m3/s)')
 
         ax.set_xticks(pd.concat([recent_flow['discharge'], forecast_flow]).index)
@@ -44,12 +63,72 @@ class Forecast:
         _ = plt.xticks(rotation=45)
         last_time = recent_flow.iloc[-1:].index.strftime("%c")[0]
         ax.set_title(f'{self.__class__.__name__} ({last_time})')
+        ax.legend(loc='upper left')
         if show:
             plt.show()
         return fig, ax
 
     def dynamic_forecast(self, recent_flow, n_hours=6):
         pass
+
+
+    def get_error_metrics(self, recompute=False, ci=60):
+
+        forecasts, real_values = self.get_real_and_predicted_values_test_data(recompute=recompute)
+
+        relative_errors = forecasts / real_values
+
+        margin = (100 - ci) / 2.0
+        negative_ci = np.percentile(relative_errors, margin, axis=0)
+        positive_ci = np.percentile(relative_errors, 100 - margin, axis=0)
+
+        error_metrics = {'ci': [negative_ci, positive_ci],
+                         'mape': np.mean(np.abs((forecasts - real_values) / real_values), axis=0),
+                         'mae': np.mean(np.abs(forecasts - real_values), axis=0),
+                         'rmse': np.sqrt(np.mean((forecasts - real_values) ** 2, axis=0))}
+
+        return error_metrics
+
+
+    def get_real_and_predicted_values_test_data(self, recompute=False):
+
+        error_file_path = str(self.file_path) + '-error_distribution.npz'
+        if os.path.isfile(error_file_path) and not recompute:
+            data = np.load(error_file_path)
+            forecasts = data['forecasts']
+            real_values = data['real_values']
+        else:
+            forecasts, real_values = self.compute_real_and_predicted_values_test_data()
+            np.savez(error_file_path, forecasts=forecasts, real_values=real_values)
+        return forecasts, real_values
+
+
+
+    def compute_real_and_predicted_values_test_data(self, n_forecasts=None):
+        " Compute error distributions "
+
+        train, validation, test = get_combined_flow_split()
+
+        input_length = 72
+        forecast_length = int(6)
+        n_possible_forecasts = len(validation) - input_length + 1 - forecast_length
+
+        if n_forecasts is None:
+            n_forecasts = n_possible_forecasts
+
+        forecasts = np.zeros((n_forecasts, forecast_length))
+        real_values = np.zeros((n_forecasts, forecast_length))
+        real_recent_flows = np.zeros((n_forecasts, 12))
+        np.random.seed(5)
+        for i, j in enumerate(np.random.choice(n_possible_forecasts, size=n_forecasts, replace=False)):
+            if i % 50 == 0:
+                print(i, 'out of', n_forecasts)
+            recent_flow = validation.iloc[j:(j + input_length)]
+            real_recent_flows[i, :] = recent_flow.iloc[-12:]['discharge']
+            real_values[i, :] = validation.iloc[(j + input_length):(j + input_length + forecast_length)]['discharge']
+            forecasts[i, :] = self.dynamic_forecast(recent_flow, n_hours=forecast_length)
+
+        return forecasts, real_values
 
 
 class NaiveForecast(Forecast):
@@ -72,8 +151,8 @@ class SARIMAXForecast(Forecast):
     model_fit_recent = None
 
     def __init__(self, model_params_path='../models/sarimax_411_011-24_model-parameters.pkl'):
-        file_path = (Path(__file__).parent / model_params_path).resolve()
-        self.model_params = self.load_SARIMAX_params(file_path)
+        self.file_path = (Path(__file__).parent / model_params_path).resolve()
+        self.model_params = self.load_SARIMAX_params(self.file_path)
 
     def load_SARIMAX_params(self, model_params_path):
         return pickle.load(open(model_params_path, 'rb'))
@@ -90,8 +169,8 @@ class SARIMAXForecast(Forecast):
 class LSTMForecast(Forecast):
 
     def __init__(self, model_params_path='../models/LSTM_model'):
-        file_path = (Path(__file__).parent / model_params_path).resolve()
-        self.model = tf.keras.models.load_model(file_path)
+        self.file_path = (Path(__file__).parent / model_params_path).resolve()
+        self.model = tf.keras.models.load_model(self.file_path)
 
     def dynamic_forecast(self, recent_flow, n_hours=6):
 
@@ -126,8 +205,8 @@ class LSTMForecast(Forecast):
 class LSTMSeq2SeqForecast(Forecast):
 
     def __init__(self, model_params_path='../models/LSTM_model_v2'):
-        file_path = (Path(__file__).parent / model_params_path).resolve()
-        self.model = tf.keras.models.load_model(file_path, custom_objects={'tf': tf})
+        self.file_path = (Path(__file__).parent / model_params_path).resolve()
+        self.model = tf.keras.models.load_model(self.file_path, custom_objects={'tf': tf})
 
     def dynamic_forecast(self, recent_flow, n_hours=6, n_hours_in=24):
         recent_flow = recent_flow.iloc[-n_hours_in:]
@@ -150,8 +229,8 @@ class XGBForecast(Forecast):
     """
 
     def __init__(self, model_params_path='../models/XGB_models_v1.pkl'):
-        file_path = (Path(__file__).parent / model_params_path).resolve()
-        self.model_dict = pickle.load(open(file_path, 'rb'))
+        self.file_path = (Path(__file__).parent / model_params_path).resolve()
+        self.model_dict = pickle.load(open(self.file_path, 'rb'))
 
     def dynamic_forecast(self, recent_flow, n_hours=6, n_hours_in=48):
         x_pred = self.create_features(recent_flow, last_n_steps=48).iloc[-1:]
@@ -164,7 +243,7 @@ class XGBForecast(Forecast):
     def get_predictions_from_model_dict(self, validation_x):
         y = []
         for name, model in self.model_dict.items():
-            y.append(model.predict(validation_x))
+            y.append(model.predict(validation_x)[0])
         return y
 
     def create_features(self, flow_df, last_n_steps=6):
