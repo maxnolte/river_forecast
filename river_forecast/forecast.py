@@ -21,7 +21,7 @@ matplotlib.use('TkAgg')
 class Forecast:
 
 
-    def generate_prediction_plot(self, recent_flow, n_hours=6, show=False, ci=False):
+    def generate_prediction_plot(self, recent_flow, n_hours=6, show=False, ci=False, save_png=False):
         """
 
         :param recent_flow:
@@ -64,9 +64,12 @@ class Forecast:
         last_time = recent_flow.iloc[-1:].index.strftime("%c")[0]
         ax.set_title(f'{self.__class__.__name__} ({last_time})')
         ax.legend(loc='upper left')
+        if save_png:
+            plt.savefig('forecast.png', dpi=300)
         if show:
             plt.show()
         return fig, ax
+
 
     def dynamic_forecast(self, recent_flow, n_hours=6):
         pass
