@@ -132,7 +132,9 @@ dmypy.json
 .idea
 
 # Built models
-/models
+# /models
 
 # Output images
-.png
+*.png
+
+
