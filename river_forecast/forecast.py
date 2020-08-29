@@ -61,6 +61,7 @@ class Forecast:
         ax.set_xticks(pd.concat([recent_flow['discharge'], forecast_flow]).index)
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%a, %H:%M"))
         _ = plt.xticks(rotation=45)
+
         last_time = recent_flow.iloc[-1:].index.strftime("%c")[0]
         ax.set_title(f'{self.__class__.__name__} ({last_time})')
         ax.legend(loc='upper left')

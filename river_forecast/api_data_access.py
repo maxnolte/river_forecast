@@ -57,8 +57,10 @@ class RivermapDataRetriever:
             readings_json = req.json()
         flow_df = pd.DataFrame(readings_json['readings']['m3s'])
         flow_df = flow_df.rename(columns={'ts': 'datetime', 'v': 'discharge'})
-        flow_df['datetime'] = flow_df['datetime'].apply(pd.to_datetime, origin='unix', unit='s')
+        flow_df['datetime'] = flow_df['datetime'].apply(pd.to_datetime, origin='unix', unit='s', utc=True)
         flow_df = flow_df.set_index('datetime')
+        # Remove time zone information - keep time local (French)
+        flow_df.index = flow_df.index.tz_convert('Europe/Paris').tz_localize(None)
         return flow_df
 
     def get_standard_dranse_data(self):
