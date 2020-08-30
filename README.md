@@ -40,7 +40,7 @@ The model is currently run on a Google Cloud Compute Engine VM using:
 
 ## Contributing
 
-river_forecast is in its early stages and highly experimental. Please get in touch with me if you have any feedback or suggestions!
+river_forecast is in its early stages and highly experimental. Please get in touch with me ([maxnolte](https://github.com/maxnolte)) if you have any feedback or suggestions!
 
 ## License
 
