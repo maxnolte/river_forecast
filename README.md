@@ -12,9 +12,17 @@ The model is currently deployed on Google Cloud, where a new prediction is gener
 
 Lastest forecast: https://storage.googleapis.com/river_forecast/forecast.png
 
-## Model Performance
+## Model Fitting & Performance
 
-TBA
+Note that most models were fitted in Google Colab and then transferred and tested in river_forecast. Colab notebooks will be made available shortly.
+
+Below is the full data set. Train and validation sets were used in the Colab for model tuning, test data only for comparison of the final models:
+
+
+The best performing model uses gradient boosting (XGBoost). Below are some example predictions in the test data:
+
+
+A detailed comparison of errors will be added soon.
 
 ## Installation
 
