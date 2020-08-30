@@ -18,9 +18,11 @@ Note that most models were fitted in Google Colab and then transferred and teste
 
 Below is the full data set. Train and validation sets were used in the Colab for model tuning, test data only for comparison of the final models:
 
+![Train-test split](https://raw.githubusercontent.com/maxnolte/river_forecast/master/images/test-validation-train.png?token=AAOW5LD3RD56KENPSQ6442C7JPNTW)
 
 The best performing model uses gradient boosting (XGBoost). Below are some example predictions in the test data:
 
+![Prediction examples](https://raw.githubusercontent.com/maxnolte/river_forecast/master/images/dranse-forecast.png?token=AAOW5LFAAYMOAJQFW4D5UFS7JPNZC)
 
 A detailed comparison of errors will be added soon.
 
