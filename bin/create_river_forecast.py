@@ -7,6 +7,6 @@ recent_data = RivermapDataRetriever().get_standard_dranse_data()
 # LSTMForecast().generate_prediction_plot(recent_data, show=True)
 # LSTMSeq2SeqForecast().generate_prediction_plot(recent_data, show=True)
 
-XGBForecast().generate_prediction_plot(recent_data, show=False, ci=True, save_png=True)
+XGBForecast().generate_prediction_plot(recent_data, show=True, ci=True, save_png=True)
 
 

@@ -5,7 +5,6 @@ import pandas as pd
 import os
 from pathlib import Path
 import pickle
-import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import seaborn as sns
@@ -15,8 +14,11 @@ from statsmodels.tsa.statespace.sarimax import SARIMAX
 
 from river_forecast.training_data_access import get_combined_flow_split
 
+<<<<<<< HEAD
 # matplotlib.use('TkAgg')
 
+=======
+>>>>>>> removing TKAgg
 
 class Forecast:
 
