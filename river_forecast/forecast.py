@@ -28,14 +28,16 @@ class Forecast:
         :param n_hours:
         :return:
         """
+
+
          
-        n_last_hours = 24
+        n_last_hours = 18
         colors = ['.9', '#9ecae1', '#3182bd']
 
         sns.set_style('darkgrid')
-        sns.set_style("darkgrid", {"axes.facecolor": colors[0]})
+        # sns.set_style("darkgrid", {"axes.facecolor": colors[0]})
 
-        fig, ax = plt.subplots(figsize=(10, 3))
+        fig, ax = plt.subplots(figsize=(10, 6))
         forecast_flow = self.dynamic_forecast(recent_flow, n_hours=n_hours)
 
         recent_flow = recent_flow.iloc[-n_last_hours:]
@@ -54,16 +56,19 @@ class Forecast:
 
             ax.fill_between(forecast_flow_plot.index, forecast_flow_plot * negative_ci,
                            forecast_flow_plot * positive_ci, color=colors[1],
-                            label=f'{confidence_interval}% confidence interval')
+                            label=f'{confidence_interval}% confidence interval',
+                            alpha=0.75)
 
-        ax.set_ylabel('River flow (m3/s)')
+        ax.set_ylabel('River flow (m$^3$/s)')
 
         ax.set_xticks(pd.concat([recent_flow['discharge'], forecast_flow]).index)
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%a, %H:%M"))
         _ = plt.xticks(rotation=45)
 
+        plt.gcf().subplots_adjust(bottom=0.2)
+
         last_time = recent_flow.iloc[-1:].index.strftime("%c")[0]
-        ax.set_title(f'{self.__class__.__name__} ({last_time})')
+        ax.set_title(f'Flow prediction for Dranse @ Reyvroz [bioge]\nForecast type: {self.__class__.__name__} --- Last recorded flow: {last_time}')
         ax.legend(loc='upper left')
         if save_png:
             plt.savefig('forecast.png', dpi=300)
