@@ -1,5 +1,5 @@
 # river_forecast
-## Predicting the flow of rivers
+## Predicting the flow of the river Dranse
 [![version](https://img.shields.io/badge/version-0.0.1-yellow.svg)](https://semver.org)
 
 river_forecast is a Python application for predicting the flow of rivers. It is currently limited to the [Dranse](https://en.wikipedia.org/wiki/Dranse_(Haute-Savoie)) in Haute-Savoie, France, a popular river for whitewater kayaking and rafting.
