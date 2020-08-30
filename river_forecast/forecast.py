@@ -15,7 +15,7 @@ from statsmodels.tsa.statespace.sarimax import SARIMAX
 
 from river_forecast.training_data_access import get_combined_flow_split
 
-matplotlib.use('TkAgg')
+# matplotlib.use('TkAgg')
 
 
 class Forecast:
