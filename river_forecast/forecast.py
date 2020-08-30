@@ -14,11 +14,9 @@ from statsmodels.tsa.statespace.sarimax import SARIMAX
 
 from river_forecast.training_data_access import get_combined_flow_split
 
-<<<<<<< HEAD
+# Needed to save plot on some systems
 # matplotlib.use('TkAgg')
 
-=======
->>>>>>> removing TKAgg
 
 class Forecast:
 
