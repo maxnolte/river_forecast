@@ -42,7 +42,7 @@ To install the right versions, run the following in a new conda environment:
 
 To generate the current standard prediction, run:
 
-    python bin/create_river_forecast.py
+    python bin/create_river_forecast_local.py
     
 Other experimental models (SARIMA, LSTM, Naive) can be run by changing the model calls in the script above.
 
