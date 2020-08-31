@@ -16,7 +16,7 @@ Link to lastest forecast: https://storage.googleapis.com/river_forecast/forecast
 
 ## Model Fitting & Performance
 
-Note that most models were fitted in Google Colab and then transferred and tested in river_forecast. Colab notebooks will be made available shortly.
+Note that most models were fitted in Google Colab and then transferred and tested in river_forecast. The notebook describing the fitting of the currently best performing model (XGBoost) can be found [here](https://colab.research.google.com/drive/1wB5qWDhYUN9KIuqHfbbg2x_47iNjnetp?usp=sharing).
 
 Below is the full data set. Train and validation sets were used in the Colab for model tuning, test data only for comparison of the final models:
 
@@ -57,6 +57,12 @@ The model is currently run on a Google Cloud Compute Engine VM using:
 ## Contributing
 
 river_forecast is in its early stages and highly experimental. Please get in touch with me ([maxnolte](https://github.com/maxnolte)) if you have any feedback or suggestions!
+
+## Next Steps
+
+- Include precipitation data.
+- Show forecast in dash application.
+- Generalize to more rivers from rivermap.ch (Let me know if you have a preference!). 
 
 ## License
 
