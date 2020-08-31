@@ -8,9 +8,11 @@ In the standard configuration, river_forecast predicts the flow of the river Dra
 
 The recent flow data of the Dranse is downloaded through the [rivermap.ch](https://www.rivermap.ch/map.html#sprache=en&styled=1&zoom=12&lat=46.33953&lng=6.55717&inf=302) API. Hourly training and test data (01/2016-06/2020) has been provided by the French Government's [Banque Hydro](http://www.hydro.eaufrance.fr/stations/V0334010).
 
-The model is currently deployed on Google Cloud, where a new prediction is generated every 15 mins:
+The model is currently deployed on Google Cloud, where a new prediction is generated every 15 mins. Below is the latest prediction:
+![](https://storage.googleapis.com/river_forecast/forecast.png)
 
-Lastest forecast: https://storage.googleapis.com/river_forecast/forecast.png
+Link to lastest forecast: https://storage.googleapis.com/river_forecast/forecast.png
+
 
 ## Model Fitting & Performance
 
@@ -42,7 +44,7 @@ To install the right versions, run the following in a new conda environment:
 
 To generate the current standard prediction, run:
 
-    python bin/create_river_forecast.py
+    python bin/create_river_forecast_local.py
     
 Other experimental models (SARIMA, LSTM, Naive) can be run by changing the model calls in the script above.
 

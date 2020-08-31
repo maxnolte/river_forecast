@@ -142,6 +142,9 @@ class Forecast:
 
 class NaiveForecast(Forecast):
 
+    def __init__(self, model_params_path='../models/naive'):
+        self.file_path = (Path(__file__).parent / model_params_path).resolve()
+
     def dynamic_forecast(self, recent_flow, n_hours=6):
         """
         :param recent_flow:
