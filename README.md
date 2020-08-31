@@ -46,6 +46,8 @@ To generate the current standard prediction, run:
 
     python bin/create_river_forecast_local.py
     
+*Warning: a private rivermap.ch API is needed (PRIVATE_RIVERZONE_API_KEY). Get in touch with me ([maxnolte](https://github.com/maxnolte)) if you are interested, and I'll ask the admins of rivermap.ch.
+    
 Other experimental models (SARIMA, LSTM, Naive) can be run by changing the model calls in the script above.
 
 The model is currently run on a Google Cloud Compute Engine VM using:
