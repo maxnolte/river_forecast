@@ -24,7 +24,7 @@ Below is the full data set. Train and validation sets were used in the Colab for
 
 The best performing model uses gradient boosting (XGBoost). All models in the error comparison below can currently be used to make predictions:
 
-![Model errors]()
+![Model errors](https://raw.githubusercontent.com/maxnolte/river_forecast/master/images/error-comparison.png)
 
 Below are some example predictions for XGBoost in the test data:
 
