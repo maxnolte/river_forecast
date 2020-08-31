@@ -11,6 +11,7 @@ The recent flow data of the Dranse is downloaded through the [rivermap.ch](https
 The model is currently deployed on Google Cloud, where a new prediction is generated every 15 mins:
 
 Lastest forecast: https://storage.googleapis.com/river_forecast/forecast.png
+(https://storage.googleapis.com/river_forecast/forecast.png)
 
 ## Model Fitting & Performance
 
