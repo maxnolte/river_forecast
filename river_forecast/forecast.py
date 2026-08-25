@@ -9,9 +9,6 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import seaborn as sns
 
-import tensorflow as tf
-from statsmodels.tsa.statespace.sarimax import SARIMAX
-
 from river_forecast.training_data_access import get_combined_flow_split
 
 # Needed to save plot on some systems
@@ -163,6 +160,8 @@ class SARIMAXForecast(Forecast):
     model_fit_recent = None
 
     def __init__(self, model_params_path='../models/sarimax_411_011-24_model-parameters.pkl'):
+        from statsmodels.tsa.statespace.sarimax import SARIMAX
+        self.SARIMAX = SARIMAX
         self.file_path = (Path(__file__).parent / model_params_path).resolve()
         self.model_params = self.load_SARIMAX_params(self.file_path)
 
@@ -170,7 +169,7 @@ class SARIMAXForecast(Forecast):
         return pickle.load(open(model_params_path, 'rb'))
 
     def update_forecast_SARIMAX(self, recent_flow):
-        model = SARIMAX(recent_flow, order=(4, 1, 1), seasonal_order=(0, 1, 1, 24))
+        model = self.SARIMAX(recent_flow, order=(4, 1, 1), seasonal_order=(0, 1, 1, 24))
         self.model_fit_recent = model.smooth(self.model_params)
 
     def dynamic_forecast(self, recent_flow, n_hours=6):
@@ -181,6 +180,7 @@ class SARIMAXForecast(Forecast):
 class LSTMForecast(Forecast):
 
     def __init__(self, model_params_path='../models/LSTM_model'):
+        import tensorflow as tf
         self.file_path = (Path(__file__).parent / model_params_path).resolve()
         self.model = tf.keras.models.load_model(self.file_path)
 
@@ -217,6 +217,7 @@ class LSTMForecast(Forecast):
 class LSTMSeq2SeqForecast(Forecast):
 
     def __init__(self, model_params_path='../models/LSTM_model_v2'):
+        import tensorflow as tf
         self.file_path = (Path(__file__).parent / model_params_path).resolve()
         self.model = tf.keras.models.load_model(self.file_path, custom_objects={'tf': tf})
 

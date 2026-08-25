@@ -1,0 +1,10 @@
+[Unit]
+Description=Run river forecast every 15 minutes
+
+[Timer]
+OnCalendar=*:00/15
+RandomizedDelaySec=60
+Persistent=true
+
+[Install]
+WantedBy=timers.target

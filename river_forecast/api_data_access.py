@@ -73,3 +73,63 @@ class RivermapDataRetriever:
 
         flow_df = self.get_latest_river_flow(n_days=4, station='Dranse')
         return convert_to_hourly_flow(flow_df, days=3, include_first_value=False)
+
+
+class HubeauDataRetriever:
+
+    """
+    This is a class for retrieving data from the French government's public
+    Hub'Eau hydrometry API (https://hubeau.eaufrance.fr/page/api-hydrometrie).
+    No API key is required. Flow is reported in l/s and converted to m3/s here.
+
+    This class only works for the Dranse so far, but can be extended easily.
+    """
+
+    station_code_dict = {'Dranse': 'V033401001'}
+    base_url = 'https://hubeau.eaufrance.fr/api/v2/hydrometrie/observations_tr'
+
+    def get_latest_river_flow(self, n_days=5, station='Dranse'):
+
+        """
+        Return the latest river discharge values from the Hub'Eau API.
+
+        :param n_days: Number of past days to include
+        :param station: Name of station
+        :return: DataFrame with time and discharge
+        """
+
+        start_date = pd.Timestamp.utcnow() - pd.Timedelta(days=n_days)
+        params = {'code_entite': self.station_code_dict[station],
+                  'grandeur_hydro': 'Q',
+                  'date_debut_obs': start_date.strftime('%Y-%m-%dT%H:%M:%S'),
+                  'size': 2000, 'sort': 'asc', 'format': 'json'}
+
+        observations = []
+        url = self.base_url
+        while url is not None:
+            with requests.get(url=url, params=params) as req:
+                readings_json = req.json()
+            observations += readings_json['data']
+            url = readings_json.get('next')
+            params = None  # 'next' URL already contains all parameters
+
+        flow_df = pd.DataFrame(observations)[['date_obs', 'resultat_obs']]
+        flow_df = flow_df.rename(columns={'date_obs': 'datetime', 'resultat_obs': 'discharge'})
+        flow_df['discharge'] = flow_df['discharge'] / 1000  # l/s -> m3/s
+        flow_df['datetime'] = pd.to_datetime(flow_df['datetime'], utc=True)
+        flow_df = flow_df.dropna().set_index('datetime').sort_index()
+        flow_df = flow_df[~flow_df.index.duplicated(keep='last')]
+        # Remove time zone information - keep time local (French)
+        flow_df.index = flow_df.index.tz_convert('Europe/Paris').tz_localize(None)
+        return flow_df
+
+    def get_standard_dranse_data(self):
+
+        """
+        Retrive flow data for Dranse and format and pad for forecast.
+
+        :return: Formatted recent Dranse flow.
+        """
+
+        flow_df = self.get_latest_river_flow(n_days=4, station='Dranse')
+        return convert_to_hourly_flow(flow_df, days=3, include_first_value=False)

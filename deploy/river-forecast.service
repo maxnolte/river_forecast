@@ -1,0 +1,10 @@
+[Unit]
+Description=Generate Dranse river forecast PNG
+Wants=network-online.target
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/docker run --rm -v /var/www/river_forecast:/output river-forecast:py37
+TimeoutStartSec=300

@@ -1,0 +1,12 @@
+# Pinned to the versions of the original 2020 conda environment
+# (see conda-spec-file.txt) so that models/XGB_models_v1.pkl loads unchanged.
+# TensorFlow and statsmodels are omitted: only needed for the experimental
+# LSTM/SARIMAX models, which are imported lazily.
+numpy==1.18.1
+scipy==1.4.1
+pandas==1.0.1
+scikit-learn==0.22.1
+xgboost==0.90
+matplotlib==3.1.3
+seaborn==0.10.0
+requests==2.31.0
